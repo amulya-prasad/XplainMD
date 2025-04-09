@@ -84,7 +84,7 @@ modification** is allowed.
 - Transparent AI for biomedical research
 
 ---
-##Key Features
+## Key Features
 
 - **Multi-relation link prediction** with R-GCN + DistMult
 - **Prediction Explanation** using GNNExplainer  
