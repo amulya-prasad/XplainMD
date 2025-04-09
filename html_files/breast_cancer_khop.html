@@ -1,0 +1,321 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "salmon", "font": {"size": 16}, "id": "primary cutaneous aggressive epidermotropic CD8+ T-cell lymphoma", "label": "primary cutaneous aggressive epidermotropic CD8+ T-cell lymphoma", "shape": "dot", "size": 15, "title": "primary cutaneous aggressive epidermotropic CD8+ T-cell lymphoma (disease)"}, {"color": "skyblue", "font": {"size": 16}, "id": "TSC22D3", "label": "TSC22D3", "shape": "dot", "size": 15, "title": "TSC22D3 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "negative regulation of cell-cell adhesion mediated by integrin", "label": "negative regulation of cell-cell adhesion mediated by integrin", "shape": "dot", "size": 15, "title": "negative regulation of cell-cell adhesion mediated by integrin (biological_process)"}, {"color": "gray", "font": {"size": 16}, "id": "regulation of cell cycle G2/M phase transition", "label": "regulation of cell cycle G2/M phase transition", "shape": "dot", "size": 15, "title": "regulation of cell cycle G2/M phase transition (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SPOP", "label": "SPOP", "shape": "dot", "size": 15, "title": "SPOP (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "NPBWR2", "label": "NPBWR2", "shape": "dot", "size": 15, "title": "NPBWR2 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "BAGE5", "label": "BAGE5", "shape": "dot", "size": 15, "title": "BAGE5 (gene/protein)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Thyroid, porcine", "label": "Thyroid, porcine", "shape": "dot", "size": 15, "title": "Thyroid, porcine (drug)"}, {"color": "gray", "font": {"size": 16}, "id": "negative regulation of branch elongation involved in ureteric bud branching by BMP signaling pathway", "label": "negative regulation of branch elongation involved in ureteric bud branching by BMP signaling pathway", "shape": "dot", "size": 15, "title": "negative regulation of branch elongation involved in ureteric bud branching by BMP signaling pathway (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "EPHA5", "label": "EPHA5", "shape": "dot", "size": 15, "title": "EPHA5 (gene/protein)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Aranidipine", "label": "Aranidipine", "shape": "dot", "size": 15, "title": "Aranidipine (drug)"}, {"color": "skyblue", "font": {"size": 16}, "id": "APCDD1", "label": "APCDD1", "shape": "dot", "size": 15, "title": "APCDD1 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "KAT6B", "label": "KAT6B", "shape": "dot", "size": 15, "title": "KAT6B (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SPSB3", "label": "SPSB3", "shape": "dot", "size": 15, "title": "SPSB3 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "cellular response to xenobiotic stimulus", "label": "cellular response to xenobiotic stimulus", "shape": "dot", "size": 15, "title": "cellular response to xenobiotic stimulus (biological_process)"}, {"color": "salmon", "font": {"size": 16}, "id": "hyperaldosteronism", "label": "hyperaldosteronism", "shape": "dot", "size": 15, "title": "hyperaldosteronism (disease)"}, {"color": "gray", "font": {"size": 16}, "id": "cellular protein metabolic process", "label": "cellular protein metabolic process", "shape": "dot", "size": 15, "title": "cellular protein metabolic process (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "BCL9", "label": "BCL9", "shape": "dot", "size": 15, "title": "BCL9 (gene/protein)"}, {"color": "lightgray", "font": {"size": 16}, "id": "Reduction of cytosolic Ca++ levels", "label": "Reduction of cytosolic Ca++ levels", "shape": "dot", "size": 15, "title": "Reduction of cytosolic Ca++ levels (pathway)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SLC22A11", "label": "SLC22A11", "shape": "dot", "size": 15, "title": "SLC22A11 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "positive regulation of fibroblast proliferation", "label": "positive regulation of fibroblast proliferation", "shape": "dot", "size": 15, "title": "positive regulation of fibroblast proliferation (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "PDK1", "label": "PDK1", "shape": "dot", "size": 15, "title": "PDK1 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "interstrand cross-link repair", "label": "interstrand cross-link repair", "shape": "dot", "size": 15, "title": "interstrand cross-link repair (biological_process)"}, {"color": "lightgray", "font": {"size": 16}, "id": "GRB2:SOS provides linkage to MAPK signaling for Integrins ", "label": "GRB2:SOS provides linkage to MAPK signaling for Integrins ", "shape": "dot", "size": 15, "title": "GRB2:SOS provides linkage to MAPK signaling for Integrins  (pathway)"}, {"color": "skyblue", "font": {"size": 16}, "id": "CAPNS1", "label": "CAPNS1", "shape": "dot", "size": 15, "title": "CAPNS1 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "positive regulation of mitotic nuclear division", "label": "positive regulation of mitotic nuclear division", "shape": "dot", "size": 15, "title": "positive regulation of mitotic nuclear division (biological_process)"}, {"color": "gray", "font": {"size": 16}, "id": "positive regulation of calcium ion import", "label": "positive regulation of calcium ion import", "shape": "dot", "size": 15, "title": "positive regulation of calcium ion import (biological_process)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "4-HYDROXYBENZALDEHYDE O-(3,3-DIMETHYLBUTANOYL)OXIME", "label": "4-HYDROXYBENZALDEHYDE O-(3,3-DIMETHYLBUTANOYL)OXIME", "shape": "dot", "size": 15, "title": "4-HYDROXYBENZALDEHYDE O-(3,3-DIMETHYLBUTANOYL)OXIME (drug)"}, {"color": "gray", "font": {"size": 16}, "id": "potassium ion homeostasis", "label": "potassium ion homeostasis", "shape": "dot", "size": 15, "title": "potassium ion homeostasis (biological_process)"}, {"color": "gray", "font": {"size": 16}, "id": "death-inducing signaling complex assembly", "label": "death-inducing signaling complex assembly", "shape": "dot", "size": 15, "title": "death-inducing signaling complex assembly (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "OSTF1", "label": "OSTF1", "shape": "dot", "size": 15, "title": "OSTF1 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "OSBPL11", "label": "OSBPL11", "shape": "dot", "size": 15, "title": "OSBPL11 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "PLCH1", "label": "PLCH1", "shape": "dot", "size": 15, "title": "PLCH1 (gene/protein)"}, {"color": "salmon", "font": {"size": 16}, "id": "biliary atresia", "label": "biliary atresia", "shape": "dot", "size": 15, "title": "biliary atresia (disease)"}, {"color": "salmon", "font": {"size": 16}, "id": "exocrine pancreatic carcinoma", "label": "exocrine pancreatic carcinoma", "shape": "dot", "size": 15, "title": "exocrine pancreatic carcinoma (disease)"}, {"color": "salmon", "font": {"size": 16}, "id": "asthma", "label": "asthma", "shape": "dot", "size": 15, "title": "asthma (disease)"}, {"color": "gray", "font": {"size": 16}, "id": "negative regulation of release of cytochrome c from mitochondria", "label": "negative regulation of release of cytochrome c from mitochondria", "shape": "dot", "size": 15, "title": "negative regulation of release of cytochrome c from mitochondria (biological_process)"}, {"color": "lightgray", "font": {"size": 16}, "id": "Defective B3GAT3 causes JDSSDHD", "label": "Defective B3GAT3 causes JDSSDHD", "shape": "dot", "size": 15, "title": "Defective B3GAT3 causes JDSSDHD (pathway)"}, {"color": "skyblue", "font": {"size": 16}, "id": "RNF115", "label": "RNF115", "shape": "dot", "size": 15, "title": "RNF115 (gene/protein)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "(9S)-9-[(8-AMMONIOOCTYL)AMINO]-1,2,3,4,9,10-HEXAHYDROACRIDINIUM", "label": "(9S)-9-[(8-AMMONIOOCTYL)AMINO]-1,2,3,4,9,10-HEXAHYDROACRIDINIUM", "shape": "dot", "size": 15, "title": "(9S)-9-[(8-AMMONIOOCTYL)AMINO]-1,2,3,4,9,10-HEXAHYDROACRIDINIUM (drug)"}, {"color": "skyblue", "font": {"size": 16}, "id": "DAPK3", "label": "DAPK3", "shape": "dot", "size": 15, "title": "DAPK3 (gene/protein)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Grepafloxacin", "label": "Grepafloxacin", "shape": "dot", "size": 15, "title": "Grepafloxacin (drug)"}, {"color": "skyblue", "font": {"size": 16}, "id": "ZCCHC7", "label": "ZCCHC7", "shape": "dot", "size": 15, "title": "ZCCHC7 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "CYB5D1", "label": "CYB5D1", "shape": "dot", "size": 15, "title": "CYB5D1 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "CBY1", "label": "CBY1", "shape": "dot", "size": 15, "title": "CBY1 (gene/protein)"}, {"color": "salmon", "font": {"size": 16}, "id": "anemia (disease)", "label": "anemia (disease)", "shape": "dot", "size": 15, "title": "anemia (disease) (disease)"}, {"color": "salmon", "font": {"size": 16}, "id": "olfactory groove meningioma", "label": "olfactory groove meningioma", "shape": "dot", "size": 15, "title": "olfactory groove meningioma (disease)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SYNGR2", "label": "SYNGR2", "shape": "dot", "size": 15, "title": "SYNGR2 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "H2BC3", "label": "H2BC3", "shape": "dot", "size": 15, "title": "H2BC3 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "ESPN", "label": "ESPN", "shape": "dot", "size": 15, "title": "ESPN (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "mitochondrial fusion", "label": "mitochondrial fusion", "shape": "dot", "size": 15, "title": "mitochondrial fusion (biological_process)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Icosapent", "label": "Icosapent", "shape": "dot", "size": 15, "title": "Icosapent (drug)"}, {"color": "skyblue", "font": {"size": 16}, "id": "ZNF428", "label": "ZNF428", "shape": "dot", "size": 15, "title": "ZNF428 (gene/protein)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Solifenacin", "label": "Solifenacin", "shape": "dot", "size": 15, "title": "Solifenacin (drug)"}, {"color": "skyblue", "font": {"size": 16}, "id": "CHRNA9", "label": "CHRNA9", "shape": "dot", "size": 15, "title": "CHRNA9 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "ACOT9", "label": "ACOT9", "shape": "dot", "size": 15, "title": "ACOT9 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "negative regulation of transcription elongation from RNA polymerase II promoter", "label": "negative regulation of transcription elongation from RNA polymerase II promoter", "shape": "dot", "size": 15, "title": "negative regulation of transcription elongation from RNA polymerase II promoter (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "CLPP", "label": "CLPP", "shape": "dot", "size": 15, "title": "CLPP (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "response to Thyroglobulin triiodothyronine", "label": "response to Thyroglobulin triiodothyronine", "shape": "dot", "size": 15, "title": "response to Thyroglobulin triiodothyronine (biological_process)"}, {"color": "lightgray", "font": {"size": 16}, "id": "FLT3 Signaling", "label": "FLT3 Signaling", "shape": "dot", "size": 15, "title": "FLT3 Signaling (pathway)"}, {"color": "gray", "font": {"size": 16}, "id": "triglyceride metabolic process", "label": "triglyceride metabolic process", "shape": "dot", "size": 15, "title": "triglyceride metabolic process (biological_process)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Agmatine", "label": "Agmatine", "shape": "dot", "size": 15, "title": "Agmatine (drug)"}, {"color": "skyblue", "font": {"size": 16}, "id": "BNIPL", "label": "BNIPL", "shape": "dot", "size": 15, "title": "BNIPL (gene/protein)"}, {"color": "salmon", "font": {"size": 16}, "id": "autoimmune hepatitis", "label": "autoimmune hepatitis", "shape": "dot", "size": 15, "title": "autoimmune hepatitis (disease)"}, {"color": "skyblue", "font": {"size": 16}, "id": "LDHB", "label": "LDHB", "shape": "dot", "size": 15, "title": "LDHB (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "RPL18A", "label": "RPL18A", "shape": "dot", "size": 15, "title": "RPL18A (gene/protein)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Olaparib", "label": "Olaparib", "shape": "dot", "size": 15, "title": "Olaparib (drug)"}, {"color": "gray", "font": {"size": 16}, "id": "positive regulation of phosphoprotein phosphatase activity", "label": "positive regulation of phosphoprotein phosphatase activity", "shape": "dot", "size": 15, "title": "positive regulation of phosphoprotein phosphatase activity (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "DPP9", "label": "DPP9", "shape": "dot", "size": 15, "title": "DPP9 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "HEATR3", "label": "HEATR3", "shape": "dot", "size": 15, "title": "HEATR3 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "ribosomal subunit export from nucleus", "label": "ribosomal subunit export from nucleus", "shape": "dot", "size": 15, "title": "ribosomal subunit export from nucleus (biological_process)"}, {"color": "lightgreen", "font": {"size": 16}, "id": "Bumetanide", "label": "Bumetanide", "shape": "dot", "size": 15, "title": "Bumetanide (drug)"}, {"color": "gray", "font": {"size": 16}, "id": "positive regulation of mRNA splicing, via spliceosome", "label": "positive regulation of mRNA splicing, via spliceosome", "shape": "dot", "size": 15, "title": "positive regulation of mRNA splicing, via spliceosome (biological_process)"}, {"color": "salmon", "font": {"size": 16}, "id": "hereditary persistence of fetal hemoglobin", "label": "hereditary persistence of fetal hemoglobin", "shape": "dot", "size": 15, "title": "hereditary persistence of fetal hemoglobin (disease)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SLC5A12", "label": "SLC5A12", "shape": "dot", "size": 15, "title": "SLC5A12 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SH3BP4", "label": "SH3BP4", "shape": "dot", "size": 15, "title": "SH3BP4 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "APOL4", "label": "APOL4", "shape": "dot", "size": 15, "title": "APOL4 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "MEGF10", "label": "MEGF10", "shape": "dot", "size": 15, "title": "MEGF10 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "DNA strand resection involved in replication fork processing", "label": "DNA strand resection involved in replication fork processing", "shape": "dot", "size": 15, "title": "DNA strand resection involved in replication fork processing (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SLC43A3", "label": "SLC43A3", "shape": "dot", "size": 15, "title": "SLC43A3 (gene/protein)"}, {"color": "salmon", "font": {"size": 16}, "id": "optic atrophy", "label": "optic atrophy", "shape": "dot", "size": 15, "title": "optic atrophy (disease)"}, {"color": "skyblue", "font": {"size": 16}, "id": "UGT1A10", "label": "UGT1A10", "shape": "dot", "size": 15, "title": "UGT1A10 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "MRPS10", "label": "MRPS10", "shape": "dot", "size": 15, "title": "MRPS10 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "FIS1", "label": "FIS1", "shape": "dot", "size": 15, "title": "FIS1 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "ARHGAP39", "label": "ARHGAP39", "shape": "dot", "size": 15, "title": "ARHGAP39 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "canonical Wnt signaling pathway", "label": "canonical Wnt signaling pathway", "shape": "dot", "size": 15, "title": "canonical Wnt signaling pathway (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "KIF3A", "label": "KIF3A", "shape": "dot", "size": 15, "title": "KIF3A (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "RABL3", "label": "RABL3", "shape": "dot", "size": 15, "title": "RABL3 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "PRR20D", "label": "PRR20D", "shape": "dot", "size": 15, "title": "PRR20D (gene/protein)"}, {"color": "lightgray", "font": {"size": 16}, "id": "CHL1 interactions", "label": "CHL1 interactions", "shape": "dot", "size": 15, "title": "CHL1 interactions (pathway)"}, {"color": "skyblue", "font": {"size": 16}, "id": "PTP4A1", "label": "PTP4A1", "shape": "dot", "size": 15, "title": "PTP4A1 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "BAG4", "label": "BAG4", "shape": "dot", "size": 15, "title": "BAG4 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "KIFC2", "label": "KIFC2", "shape": "dot", "size": 15, "title": "KIFC2 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "NOS1", "label": "NOS1", "shape": "dot", "size": 15, "title": "NOS1 (gene/protein)"}, {"color": "gray", "font": {"size": 16}, "id": "axon regeneration", "label": "axon regeneration", "shape": "dot", "size": 15, "title": "axon regeneration (biological_process)"}, {"color": "skyblue", "font": {"size": 16}, "id": "FAM107A", "label": "FAM107A", "shape": "dot", "size": 15, "title": "FAM107A (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "CCT7", "label": "CCT7", "shape": "dot", "size": 15, "title": "CCT7 (gene/protein)"}, {"color": "lightgray", "font": {"size": 16}, "id": "The canonical retinoid cycle in rods (twilight vision)", "label": "The canonical retinoid cycle in rods (twilight vision)", "shape": "dot", "size": 15, "title": "The canonical retinoid cycle in rods (twilight vision) (pathway)"}, {"color": "skyblue", "font": {"size": 16}, "id": "SYNGR1", "label": "SYNGR1", "shape": "dot", "size": 15, "title": "SYNGR1 (gene/protein)"}, {"color": "skyblue", "font": {"size": 16}, "id": "DIPK2A", "label": "DIPK2A", "shape": "dot", "size": 15, "title": "DIPK2A (gene/protein)"}]);
+                  edges = new vis.DataSet([{"color": "blue", "from": "BCL9", "title": "bioprocess_protein", "to": "canonical Wnt signaling pathway", "width": 2}, {"color": "green", "from": "SLC22A11", "title": "drug_protein", "to": "Bumetanide", "width": 2}, {"color": "purple", "from": "exocrine pancreatic carcinoma", "title": "disease_protein", "to": "RABL3", "width": 2}, {"color": "purple", "from": "asthma", "title": "disease_protein", "to": "KIF3A", "width": 2}, {"color": "gray", "from": "RNF115", "title": "protein_protein", "to": "RPL18A", "width": 2}, {"color": "blue", "from": "mitochondrial fusion", "title": "bioprocess_protein", "to": "FIS1", "width": 2}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"nodes": {"scaling": {"min": 10, "max": 30}}, "edges": {"smooth": true}, "physics": {"solver": "forceAtlas2Based", "forceAtlas2Based": {"gravitationalConstant": -50, "centralGravity": 0.02}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

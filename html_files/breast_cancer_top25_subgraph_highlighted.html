@@ -1,0 +1,357 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 800px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "gold", "font": {"color": "black"}, "id": "7254", "label": "breast cancer", "shape": "dot", "size": 35, "title": "breast cancer (disease)"}, {"color": "salmon", "font": {"color": "black"}, "id": "4989", "label": "breast carcinoma", "shape": "dot", "size": 22, "title": "breast carcinoma (disease)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "1649", "label": "DDIT3", "shape": "dot", "size": 22, "title": "DDIT3 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "1565", "label": "CYP2D6", "shape": "dot", "size": 22, "title": "CYP2D6 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "713", "label": "C1QB", "shape": "dot", "size": 22, "title": "C1QB (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": 386681, "label": "KRTAP10-8", "shape": "dot", "size": 22, "title": "KRTAP10-8 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "5243", "label": "ABCB1", "shape": "dot", "size": 22, "title": "ABCB1 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "1576", "label": "CYP3A4", "shape": "dot", "size": 22, "title": "CYP3A4 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "1956", "label": "EGFR", "shape": "dot", "size": 22, "title": "EGFR (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "367", "label": "AR", "shape": "dot", "size": 22, "title": "AR (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "5154", "label": "PDGFA", "shape": "dot", "size": 22, "title": "PDGFA (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "2099", "label": "ESR1", "shape": "dot", "size": 22, "title": "ESR1 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "1386", "label": "ATF2", "shape": "dot", "size": 22, "title": "ATF2 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "1499", "label": "CTNNB1", "shape": "dot", "size": 22, "title": "CTNNB1 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "7124", "label": "TNF", "shape": "dot", "size": 22, "title": "TNF (gene/protein)"}, {"color": "salmon", "font": {"color": "black"}, "id": "21100", "label": "breast neoplasm", "shape": "dot", "size": 22, "title": "breast neoplasm (disease)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "958", "label": "CD40", "shape": "dot", "size": 22, "title": "CD40 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "2353", "label": "FOS", "shape": "dot", "size": 22, "title": "FOS (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "7157", "label": "TP53", "shape": "dot", "size": 22, "title": "TP53 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": 84445, "label": "LZTS2", "shape": "dot", "size": 22, "title": "LZTS2 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "369", "label": "ARAF", "shape": "dot", "size": 22, "title": "ARAF (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "5744", "label": "PTHLH", "shape": "dot", "size": 22, "title": "PTHLH (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": 23411, "label": "SIRT1", "shape": "dot", "size": 22, "title": "SIRT1 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "2321", "label": "FLT1", "shape": "dot", "size": 22, "title": "FLT1 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": "2033", "label": "EP300", "shape": "dot", "size": 22, "title": "EP300 (gene/protein)"}, {"color": "skyblue", "font": {"color": "black"}, "id": 50943, "label": "FOXP3", "shape": "dot", "size": 22, "title": "FOXP3 (gene/protein)"}]);
+                  edges = new vis.DataSet([{"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "367", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "369", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "713", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "958", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "1386", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "1499", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "1565", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "1576", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "1649", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "1956", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "2033", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "2099", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "2321", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "2353", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "5154", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "5243", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "5744", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "7124", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": "7157", "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_disease", "title": "disease_disease", "to": "4989", "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_disease", "title": "disease_disease", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": 23411, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": 50943, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": 84445, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7254", "label": "disease_protein", "title": "disease_protein", "to": 386681, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "367", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "369", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "958", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "1499", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "1565", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "1576", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "1649", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "1956", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "2033", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "2099", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "2321", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "2353", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "5154", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "5243", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "5744", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "7124", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": "7157", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": 23411, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "4989", "label": "disease_protein", "title": "disease_protein", "to": 50943, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1649", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1565", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "713", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": 386681, "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "5243", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1576", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1956", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1956", "label": "disease_protein", "title": "disease_protein", "to": "5744", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "367", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "5154", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "2099", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "2099", "label": "disease_protein", "title": "disease_protein", "to": "5744", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1386", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1386", "label": "disease_protein", "title": "disease_protein", "to": "2353", "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": "1499", "label": "protein_protein", "title": "protein_protein", "to": 84445, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1499", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1499", "label": "disease_protein", "title": "disease_protein", "to": "5744", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "1499", "label": "disease_protein", "title": "disease_protein", "to": "2033", "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": "7124", "label": "protein_protein", "title": "protein_protein", "to": 23411, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7124", "label": "disease_protein", "title": "disease_protein", "to": "21100", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": "369", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": "958", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": "2033", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": "2321", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": "2353", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": "5744", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": "7157", "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": 23411, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": 50943, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "21100", "label": "disease_protein", "title": "disease_protein", "to": 84445, "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": "7157", "label": "protein_protein", "title": "protein_protein", "to": 23411, "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": "7157", "label": "protein_protein", "title": "protein_protein", "to": 50943, "width": 2.5}, {"color": "purple", "font": {"align": "middle", "size": 16}, "from": "7157", "label": "disease_protein", "title": "disease_protein", "to": "5744", "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": 23411, "label": "protein_protein", "title": "protein_protein", "to": 50943, "width": 2.5}, {"color": "#999999", "font": {"align": "middle", "size": 16}, "from": "2033", "label": "protein_protein", "title": "protein_protein", "to": 50943, "width": 2.5}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "barnesHut": {
+            "avoidOverlap": 0,
+            "centralGravity": 0.3,
+            "damping": 0.95,
+            "gravitationalConstant": -25000,
+            "springConstant": 0.05,
+            "springLength": 200
+        },
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "lightgray", "font": {"color": "black"}, "id": "Gibberellin A4", "label": "Gibberellin A4", "shape": "dot", "size": 57.13314945670289, "title": "closeness_centrality: 0.66667 | Type: drug"}, {"color": "skyblue", "font": {"color": "black"}, "id": "AADACL2", "label": "AADACL2", "shape": "dot", "size": 80.0, "title": "closeness_centrality: 1.00000 | Type: gene/protein"}, {"color": "lightgray", "font": {"color": "black"}, "id": "Gibberellic acid", "label": "Gibberellic acid", "shape": "dot", "size": 57.13314945670289, "title": "closeness_centrality: 0.66667 | Type: drug"}, {"color": "gray", "font": {"color": "black"}, "id": "allantoin catabolic process", "label": "allantoin catabolic process", "shape": "dot", "size": 80.0, "title": "closeness_centrality: 1.00000 | Type: biological_process"}, {"color": "skyblue", "font": {"color": "black"}, "id": "ALLC", "label": "ALLC", "shape": "dot", "size": 80.0, "title": "closeness_centrality: 1.00000 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "CES1P1", "label": "CES1P1", "shape": "dot", "size": 80.0, "title": "closeness_centrality: 1.00000 | Type: gene/protein"}, {"color": "lightgray", "font": {"color": "black"}, "id": "1,1,1-TRIFLUORO-3-(OCTYLTHIO)ACETONE", "label": "1,1,1-TRIFLUORO-3-(OCTYLTHIO)ACETONE", "shape": "dot", "size": 80.0, "title": "closeness_centrality: 1.00000 | Type: drug"}, {"color": "gray", "font": {"color": "black"}, "id": "tRNA 3\u0027-trailer cleavage, endonucleolytic", "label": "tRNA 3\u0027-trailer cleavage, endonucleolytic", "shape": "dot", "size": 80.0, "title": "closeness_centrality: 1.00000 | Type: biological_process"}, {"color": "skyblue", "font": {"color": "black"}, "id": "ELAC1", "label": "ELAC1", "shape": "dot", "size": 80.0, "title": "closeness_centrality: 1.00000 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "RNU2-1", "label": "RNU2-1", "shape": "dot", "size": 62.84986209252717, "title": "closeness_centrality: 0.75000 | Type: gene/protein"}, {"color": "gray", "font": {"color": "black"}, "id": "mRNA branch site recognition", "label": "mRNA branch site recognition", "shape": "dot", "size": 62.84986209252717, "title": "closeness_centrality: 0.75000 | Type: biological_process"}, {"color": "skyblue", "font": {"color": "black"}, "id": "RNU1-1", "label": "RNU1-1", "shape": "dot", "size": 45.699724185054336, "title": "closeness_centrality: 0.50000 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "OVAAL", "label": "OVAAL", "shape": "dot", "size": 45.699724185054336, "title": "closeness_centrality: 0.50000 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "UBC", "label": "UBC", "shape": "dot", "size": 38.35646501774605, "title": "closeness_centrality: 0.39296 | Type: gene/protein"}, {"color": "lightgray", "font": {"color": "black"}, "id": "Interleukin-1 signaling", "label": "Interleukin-1 signaling", "shape": "dot", "size": 32.12612749429829, "title": "closeness_centrality: 0.30214 | Type: pathway"}, {"color": "skyblue", "font": {"color": "black"}, "id": "PBRM1", "label": "PBRM1", "shape": "dot", "size": 33.031028953942, "title": "closeness_centrality: 0.31533 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "SMU1", "label": "SMU1", "shape": "dot", "size": 32.24143738955035, "title": "closeness_centrality: 0.30382 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "HSPA14", "label": "HSPA14", "shape": "dot", "size": 32.16524424232535, "title": "closeness_centrality: 0.30271 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "FKBP3", "label": "FKBP3", "shape": "dot", "size": 31.584760994017977, "title": "closeness_centrality: 0.29424 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "OIP5", "label": "OIP5", "shape": "dot", "size": 32.54098969889088, "title": "closeness_centrality: 0.30818 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "TSFM", "label": "TSFM", "shape": "dot", "size": 32.01748855976889, "title": "closeness_centrality: 0.30055 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "HSPA8", "label": "HSPA8", "shape": "dot", "size": 35.279446534217314, "title": "closeness_centrality: 0.34810 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "ATP6V1E1", "label": "ATP6V1E1", "shape": "dot", "size": 32.655230734922, "title": "closeness_centrality: 0.30985 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "NOP9", "label": "NOP9", "shape": "dot", "size": 32.844016088792245, "title": "closeness_centrality: 0.31260 | Type: gene/protein"}, {"color": "salmon", "font": {"color": "black"}, "id": "schizophrenia", "label": "schizophrenia", "shape": "dot", "size": 36.88309225663457, "title": "closeness_centrality: 0.37148 | Type: disease"}, {"color": "skyblue", "font": {"color": "black"}, "id": "DCLK1", "label": "DCLK1", "shape": "dot", "size": 32.4777377433027, "title": "closeness_centrality: 0.30726 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "NGFR", "label": "NGFR", "shape": "dot", "size": 33.405571218492554, "title": "closeness_centrality: 0.32079 | Type: gene/protein"}, {"color": "lightgray", "font": {"color": "black"}, "id": "Mosapramine", "label": "Mosapramine", "shape": "dot", "size": 29.98066597181074, "title": "closeness_centrality: 0.27086 | Type: drug"}, {"color": "skyblue", "font": {"color": "black"}, "id": "ADCY7", "label": "ADCY7", "shape": "dot", "size": 32.62140144730339, "title": "closeness_centrality: 0.30936 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "GSTA1", "label": "GSTA1", "shape": "dot", "size": 31.57682292064338, "title": "closeness_centrality: 0.29413 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "NNMT", "label": "NNMT", "shape": "dot", "size": 31.888260004067295, "title": "closeness_centrality: 0.29867 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "PRKCA", "label": "PRKCA", "shape": "dot", "size": 35.27292468344193, "title": "closeness_centrality: 0.34801 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "SLC30A3", "label": "SLC30A3", "shape": "dot", "size": 31.231123679331382, "title": "closeness_centrality: 0.28909 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "ATM", "label": "ATM", "shape": "dot", "size": 34.95871846943584, "title": "closeness_centrality: 0.34343 | Type: gene/protein"}, {"color": "skyblue", "font": {"color": "black"}, "id": "GSK3B", "label": "GSK3B", "shape": "dot", "size": 35.305569609599544, "title": "closeness_centrality: 0.34848 | Type: gene/protein"}]);
+                  edges = new vis.DataSet([{"from": "Gibberellin A4", "to": "AADACL2"}, {"from": "AADACL2", "to": "Gibberellic acid"}, {"from": "allantoin catabolic process", "to": "ALLC"}, {"from": "CES1P1", "to": "1,1,1-TRIFLUORO-3-(OCTYLTHIO)ACETONE"}, {"from": "tRNA 3\u0027-trailer cleavage, endonucleolytic", "to": "ELAC1"}, {"from": "RNU2-1", "to": "mRNA branch site recognition"}, {"from": "RNU2-1", "to": "RNU1-1"}, {"from": "mRNA branch site recognition", "to": "OVAAL"}, {"from": "UBC", "to": "Interleukin-1 signaling"}, {"from": "UBC", "to": "PBRM1"}, {"from": "UBC", "to": "SMU1"}, {"from": "UBC", "to": "HSPA14"}, {"from": "UBC", "to": "FKBP3"}, {"from": "UBC", "to": "OIP5"}, {"from": "UBC", "to": "TSFM"}, {"from": "UBC", "to": "HSPA8"}, {"from": "UBC", "to": "ATP6V1E1"}, {"from": "UBC", "to": "NOP9"}, {"from": "schizophrenia", "to": "DCLK1"}, {"from": "schizophrenia", "to": "NGFR"}, {"from": "schizophrenia", "to": "Mosapramine"}, {"from": "schizophrenia", "to": "ADCY7"}, {"from": "schizophrenia", "to": "GSTA1"}, {"from": "schizophrenia", "to": "NNMT"}, {"from": "schizophrenia", "to": "PRKCA"}, {"from": "schizophrenia", "to": "SLC30A3"}, {"from": "schizophrenia", "to": "ATM"}, {"from": "schizophrenia", "to": "GSK3B"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"nodes": {"shape": "dot", "scaling": {"min": 10, "max": 40}}, "edges": {"color": {"inherit": true}, "smooth": true}, "physics": {"solver": "repulsion", "repulsion": {"nodeDistance": 150, "centralGravity": 0.1}}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
