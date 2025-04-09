@@ -63,7 +63,7 @@ with an LLM
 ##  Output 
 
 <p align="center">
-  <img src="images/output.png" alt="output" width="600"/>
+  <img src="images/output_version_final.png" alt="output" width="600"/>
 </p>
 
 ---
