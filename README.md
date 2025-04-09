@@ -16,7 +16,7 @@ reasoning**.
 </p>
 ---
 
-## Pipeline of the Architecture
+## XplainMD Architecture
 <p align="center">
   <img src="images/pipeline_version_3.png" alt="architecture" width="600"/>
 </p>
