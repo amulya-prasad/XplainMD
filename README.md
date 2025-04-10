@@ -109,6 +109,8 @@ Built using:
 
 If you find this useful or want to collaborate, feel free to reach out at fhirshotlearning@gmail.com  or **⭐️ star the repo**!
 
+This project is explained in full detail in my medium page: https://medium.com/@fhirshotlearning/xplainmd-a-graph-powered-guide-to-smarter-healthcare-fd5fe22504de
+
 
 ### Developed by Amulya Prasad
 
