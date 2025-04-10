@@ -41,6 +41,8 @@ etc.)
 - Centrality metrics (degree, closeness, betweenness)
 - Causal subgraph extraction
 
+This notebook can be viewed at : https://nbviewer.org/github/amulya-prasad/XplainMD/blob/master/Notebooks/PrimeKG_Data_Visualization_Part1.ipynb
+
 ### 2. Missing Link Prediction
 
 - **ML Models:** Node2Vec + XGBoost
