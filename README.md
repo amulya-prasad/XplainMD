@@ -31,6 +31,8 @@ by Harvard, containing:
 etc.)
 - 20+ data sources
 
+  The dataset is available on their README: https://github.com/mims-harvard/PrimeKG 
+
 ---
 
 ##  Highlights
